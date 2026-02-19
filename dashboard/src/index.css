@@ -46,11 +46,8 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-}
+/* Global body/html owned by Core when federated. Omit here to avoid layout conflicts. */
+/* body { margin: 0; min-width: 320px; min-height: 100vh; } */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -131,7 +128,5 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+  /* body owned by Core when federated; do not override */
 }

@@ -1,0 +1,12 @@
+/**
+ * Standalone-only: body layout. Not imported by remoteEntry.tsx.
+ * When federated, Core owns body; this file is only loaded by main.tsx in standalone mode.
+ * Uses CSS variables from index.css (loaded before this in main.tsx).
+ */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+}
