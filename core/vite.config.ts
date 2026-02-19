@@ -4,25 +4,37 @@ import tailwindcss from '@tailwindcss/vite'
 import federation from '@originjs/vite-plugin-federation'
 import path from "path"
 import { fileURLToPath } from "url"
-import { readFileSync } from "fs"
+import { readFileSync, existsSync } from "fs"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Derive federation remotes from module.json (single source of truth)
-const moduleJsonPath = path.resolve(__dirname, "public", "module.json")
-const moduleJson = JSON.parse(readFileSync(moduleJsonPath, "utf-8")) as {
-  modules: Array<{ id: string; baseUrl: string }>
-}
-const federationRemotes: Record<string, string> = {}
-for (const m of moduleJson.modules ?? []) {
-  if (m.baseUrl && m.baseUrl.trim() !== "") {
-    const base = m.baseUrl.replace(/\/$/, "")
-    // Plugin emits remoteEntry.js under build.assetsDir (default "assets")
-    federationRemotes[m.id] = `${base}/assets/remoteEntry.js`
+// Federation remotes: from module.json (build artifact) or env fallback (Vercel/CI)
+function getFederationRemotes(): Record<string, string> {
+  const moduleJsonPath = path.resolve(__dirname, "public", "module.json")
+  if (existsSync(moduleJsonPath)) {
+    const moduleJson = JSON.parse(readFileSync(moduleJsonPath, "utf-8")) as {
+      modules: Array<{ id: string; baseUrl: string }>
+    }
+    const remotes: Record<string, string> = {}
+    for (const m of moduleJson.modules ?? []) {
+      if (m.baseUrl && m.baseUrl.trim() !== "") {
+        const base = m.baseUrl.replace(/\/$/, "")
+        remotes[m.id] = `${base}/assets/remoteEntry.js`
+      }
+    }
+    return remotes
   }
+  // Env fallback when module.json not yet generated (e.g. vite build run without pre-step)
+  const dashboardUrl = (process.env.VITE_REMOTE_DASHBOARD_URL || "").replace(/\/$/, "")
+  const omsUrl = (process.env.VITE_REMOTE_OMS_URL || "").replace(/\/$/, "")
+  const remotes: Record<string, string> = {}
+  if (dashboardUrl) remotes.dashboard = `${dashboardUrl}/assets/remoteEntry.js`
+  if (omsUrl) remotes.oms = `${omsUrl}/assets/remoteEntry.js`
+  return remotes
 }
 
+const federationRemotes = getFederationRemotes()
 // https://vite.dev/config/
 export default defineConfig({
   server: { strictPort: true, port: 5173 },

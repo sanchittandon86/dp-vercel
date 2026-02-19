@@ -2,10 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Scan remote MFE source files so Core's Tailwind build covers all their utility classes.
-   Remotes rely on Core's CSS — they do NOT inject their own global CSS when federated. */
-@source "../../dashboard/src";
-@source "../../oms/src";
+/* Core owns all global styling. Remotes must NOT ship Tailwind base/utilities when federated.
+   Contract: If a remote needs a new utility, it must be added to Core first.
+   See core/docs/REMOTE_STYLING_CONTRACT.md */
 
 @custom-variant dark (&:is(.dark *));
 :root {
